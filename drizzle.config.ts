@@ -5,11 +5,11 @@ export default defineConfig({
   schema: './src/database/schema/index.ts',
   out: './drizzle',
   dbCredentials: {
-    host: process.env.PG_HOST || 'next-database',
-    port: parseInt(process.env.PG_PORT || '5432', 10),
+    host: process.env.POSTGRES_HOST || 'next-database',
+    port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
     database: process.env.PG_DATABASE || 'next',
-    user: process.env.PG_USER || 'next',
-    password: process.env.PG_PASSWORD || 'next',
+    user: process.env.POSTGRES_USER || 'next',
+    password: process.env.POSTGRES_PASSWORD || 'next',
     ssl: false,
   },
 })

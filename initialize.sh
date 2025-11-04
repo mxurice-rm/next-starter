@@ -48,7 +48,7 @@ print_footer() {
     echo -e "${BOLD}${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BOLD}Next step:${NC}"
-    echo -e "  ${BLUE}${ARROW}${NC} Run ${BOLD}${GREEN}npm run dev${NC} to start the development server"
+    echo -e "  ${BLUE}${ARROW}${NC} Run ${BOLD}${GREEN}pnpm run dev${NC} to start the development server"
     echo ""
 }
 
@@ -58,8 +58,8 @@ print_header
 
 # 1. Install NPM packages
 print_step "1" "Installing NPM packages"
-echo -e "${BLUE}${ARROW}${NC} Running npm install..."
-if npm install > /dev/null 2>&1; then
+echo -e "${BLUE}${ARROW}${NC} Running pnpm install..."
+if pnpm install > /dev/null 2>&1; then
     print_success "NPM packages installed successfully"
 else
     print_error "Failed to install NPM packages"
@@ -131,11 +131,20 @@ fi
 
 # 5. Push database schema
 print_step "5" "Initializing database schema"
-echo -e "${BLUE}${ARROW}${NC} Running database migrations..."
-if npx drizzle-kit push > /dev/null 2>&1; then
-    print_success "Database schema initialized successfully"
+echo -e "${BLUE}${ARROW}${NC} Generating database schema..."
+if pnpm run db:generate > /dev/null 2>&1; then
+    print_success "Database schema generated successfully"
 else
-    print_error "Failed to initialize database schema"
+    print_error "Failed to generate database schema"
+    exit 1
+fi
+
+# 6. Push database schema
+echo -e "${BLUE}${ARROW}${NC} pushing schema to database..."
+if pnpm run db:push > /dev/null 2>&1; then
+    print_success "Database schema pushed successfully"
+else
+    print_error "Failed to push schema to database"
     exit 1
 fi
 
