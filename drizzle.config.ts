@@ -10,6 +10,6 @@ export default defineConfig({
     database: process.env.PG_DATABASE || 'next',
     user: process.env.POSTGRES_USER || 'next',
     password: process.env.POSTGRES_PASSWORD || 'next',
-    ssl: false,
+    ssl: 'allow',
   },
 })
