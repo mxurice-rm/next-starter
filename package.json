@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push --force"
+    "db:push": "drizzle-kit push --force",
+    "db:migrate": "drizzle-kit migrate"
   },
   "husky": {
     "hooks": {

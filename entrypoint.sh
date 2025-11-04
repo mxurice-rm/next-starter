@@ -10,10 +10,9 @@ done
 
 echo "✅ Database is ready!"
 
-# Run database migrations
-echo "🔄 Running database migrations..."
+# Push database schema
+echo "🔄 Pushing database schema..."
 pnpm run db:push
-
 
 # Start the server
 echo "🎉 Starting Next.js application..."
