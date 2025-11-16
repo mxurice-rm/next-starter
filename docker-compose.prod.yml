@@ -1,16 +1,31 @@
+x-nginx-base: &nginx-base
+  image: nginx:alpine
+  container_name: next-nginx
+  depends_on:
+    - nextjs
+  networks:
+    - next-network
+  restart: always
+
 services:
-  nginx:
-    container_name: next-nginx
-    image: nginx:alpine
+  nginx-internal:
+    <<: *nginx-base
+    profiles: [ "internal" ]
     ports:
-      - '80:80'
+      - "80:80"
     volumes:
-      - ./nginx/nginx-proxy.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - nextjs
-    networks:
-      - next-network
-    restart: always
+      - ./nginx/nginx.internal.conf:/etc/nginx/nginx.conf:ro
+
+  nginx-ssl:
+    <<: *nginx-base
+    profiles: [ "ssl" ]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.ssl.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/nginx/ssl:ro
+      - /var/www/certbot:/var/www/certbot:ro
 
   nextjs:
     container_name: next-app
@@ -30,7 +45,7 @@ services:
 
   database:
     container_name: next-database
-    image: postgres:16-alpine
+    image: postgres:latest
     env_file:
       - .env
     environment:
@@ -44,7 +59,7 @@ services:
     networks:
       - next-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}" ]
       interval: 10s
       timeout: 5s
       retries: 5
