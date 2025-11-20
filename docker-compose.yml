@@ -1,7 +1,7 @@
 services:
   database:
     container_name: next-database
-    image: postgres:latest
+    image: postgres:17
     env_file:
       - .env
     environment:
