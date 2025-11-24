@@ -1,6 +1,5 @@
 services:
-  database:
-    container_name: next-database
+  postgres:
     image: postgres:17
     env_file:
       - .env
@@ -11,9 +10,9 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - next-database:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     networks:
-      - next-network
+      - app-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}"]
       interval: 10s
@@ -23,26 +22,24 @@ services:
     shm_size: 128mb
 
   adminer:
-    container_name: next-adminer
     image: adminer:latest
     command: php -S 0.0.0.0:8080 -t /var/www/html
     env_file:
       - .env
     environment:
       ADMINER_DEFAULT_DB_DRIVER: 'pgsql'
-      ADMINER_DEFAULT_DB_HOST: next-database
+      ADMINER_DEFAULT_DB_HOST: postgres
       ADMINER_DEFAULT_DB_NAME: ${POSTGRES_DATABASE}
     ports:
       - '8080:8080'
     depends_on:
-      - database
+      - postgres
     networks:
-      - next-network
-    restart: unless-stopped
+      - app-network
 
 volumes:
-  next-database:
+  postgres:
 
 networks:
-  next-network:
+  app-network:
     driver: bridge

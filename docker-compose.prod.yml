@@ -1,10 +1,9 @@
 x-nginx-base: &nginx-base
   image: nginx:alpine
-  container_name: next-nginx
   depends_on:
     - nextjs
   networks:
-    - next-network
+    - app-network
   restart: always
 
 services:
@@ -12,7 +11,7 @@ services:
     <<: *nginx-base
     profiles: [ "internal" ]
     ports:
-      - "80:80"
+      - '80:80'
     volumes:
       - ./nginx/nginx.internal.conf:/etc/nginx/nginx.conf:ro
 
@@ -20,15 +19,14 @@ services:
     <<: *nginx-base
     profiles: [ "ssl" ]
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./nginx/nginx.ssl.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/nginx/ssl:ro
       - /var/www/certbot:/var/www/certbot:ro
 
   nextjs:
-    container_name: next-app
     build:
       context: .
       dockerfile: next.Dockerfile
@@ -37,14 +35,13 @@ services:
     expose:
       - '3000'
     depends_on:
-      database:
+      postgres:
         condition: service_healthy
     networks:
-      - next-network
+      - app-network
     restart: always
 
-  database:
-    container_name: next-database
+  postgres:
     image: postgres:17
     env_file:
       - .env
@@ -55,9 +52,9 @@ services:
     expose:
       - '5432'
     volumes:
-      - next-database:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
     networks:
-      - next-network
+      - app-network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}" ]
       interval: 10s
@@ -67,8 +64,8 @@ services:
     shm_size: 256mb
 
 volumes:
-  next-database:
+  postgres:
 
 networks:
-  next-network:
+  app-network:
     driver: bridge
