@@ -3,16 +3,22 @@
 import { createFormHook } from '@tanstack/react-form'
 import { fieldContext, formContext } from '@/context/form-context'
 import TextField from '@/components/form/fields/text-field'
-import TextareaField from '@/components/form/fields/textarea-field'
 import CheckboxField from '@/components/form/fields/checkbox-field'
+import RadioField from '@/components/form/fields/radio-field'
+import SwitchField from '@/components/form/fields/switch-field'
+import SelectField from '@/components/form/fields/select-field'
+import TextareaField from '@/components/form/fields/textarea-field'
 
 export const { useAppForm } = createFormHook({
   fieldContext,
   formContext,
   fieldComponents: {
     TextField,
-    TextareaField,
     CheckboxField,
+    RadioField,
+    SwitchField,
+    SelectField,
+    TextareaField,
   },
   formComponents: {},
 })

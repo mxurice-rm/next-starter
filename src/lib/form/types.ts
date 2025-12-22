@@ -1,13 +1,30 @@
-import { ReactElement } from 'react'
+import React, { ReactElement } from 'react'
+import { AnyFieldApi } from '@tanstack/react-form'
 
-type FieldType = 'text' | 'textarea'
+export type FormFieldState = {
+  field: AnyFieldApi
+  inputId: string
+  isInvalid: boolean
+  isArrayField: boolean
+} & FormFieldDisplay
 
-export type Orientation = 'vertical' | 'horizontal' | 'responsive'
+export type FormFieldDisplay = {
+  label?: string
+  description?: string
+  placeholder?: string
+}
 
-export type FieldConfig = {
+export type FormFieldBaseProps<
+  TComponent extends React.ElementType,
+  TOmit extends keyof React.ComponentProps<TComponent> = never,
+> = {
+  fieldDisplay?: FormFieldDisplay
+} & Omit<React.ComponentProps<TComponent>, TOmit>
+
+export type FormFieldConfig = {
   orientation?: 'vertical' | 'horizontal' | 'responsive'
-  groupedDescription?: boolean
-  inputFirst?: boolean
+  groupFieldContent?: boolean
+  controlFirst?: boolean
 }
 
 export type InputGroupAddon = {
