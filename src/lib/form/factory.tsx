@@ -1,48 +1,59 @@
 import React from 'react'
-import { FormFieldBaseProps, FormFieldState } from './types'
+import { FieldLabels, FieldState } from './types'
 import { useFormField } from '@/hooks/use-form-field'
 
 export type FieldOptions = {
   isIteratedField?: boolean
 }
 
-type FieldRenderContext<TProps> = {
-  formField: FormFieldState
+// --- Render Types ---
+
+type RenderContext<TProps> = {
+  formField: FieldState
   props: TProps
 }
 
-type FieldRenderer<TProps> = (
-  context: FieldRenderContext<TProps>,
-) => React.ReactElement
+type Renderer<TProps> = (context: RenderContext<TProps>) => React.ReactElement
 
-type FieldComponentProps<
+// --- Component Props ---
+
+type BaseProps<
+  TComponent extends React.ElementType,
+  TOmit extends keyof React.ComponentProps<TComponent> = never,
+> = {
+  labels?: FieldLabels
+} & Omit<React.ComponentProps<TComponent>, TOmit>
+
+type ComponentProps<
   TComponent extends React.ElementType,
   TSpecificProps,
   TOmit extends keyof React.ComponentProps<TComponent>,
-> = TSpecificProps & FormFieldBaseProps<TComponent, TOmit>
+> = TSpecificProps & BaseProps<TComponent, TOmit>
 
-type FieldRendererProps<
+type RendererProps<
   TComponent extends React.ElementType,
   TSpecificProps,
   TOmit extends keyof React.ComponentProps<TComponent>,
 > = TSpecificProps & Omit<React.ComponentProps<TComponent>, TOmit>
 
-type BaseFieldComponent<
+// --- Component Types ---
+
+type FieldComponent<
   TComponent extends React.ElementType,
   TSpecificProps,
   TOmit extends keyof React.ComponentProps<TComponent>,
 > = (
-  props: FieldComponentProps<TComponent, TSpecificProps, TOmit>,
+  props: ComponentProps<TComponent, TSpecificProps, TOmit>,
 ) => React.ReactElement
 
-type FieldComponentWithChaining<
+type ChainableFieldComponent<
   TComponent extends React.ElementType,
   TSpecificProps,
   TOmit extends keyof React.ComponentProps<TComponent>,
-> = BaseFieldComponent<TComponent, TSpecificProps, TOmit> & {
+> = FieldComponent<TComponent, TSpecificProps, TOmit> & {
   withOptions: (
     options: FieldOptions,
-  ) => BaseFieldComponent<TComponent, TSpecificProps, TOmit>
+  ) => FieldComponent<TComponent, TSpecificProps, TOmit>
 }
 
 export function createFormField<
@@ -51,33 +62,27 @@ export function createFormField<
   TSpecificProps = object,
   TOmit extends keyof React.ComponentProps<TComponent> = never,
 >(
-  render: FieldRenderer<FieldRendererProps<TComponent, TSpecificProps, TOmit>>,
+  render: Renderer<RendererProps<TComponent, TSpecificProps, TOmit>>,
   options?: FieldOptions,
-): FieldComponentWithChaining<TComponent, TSpecificProps, TOmit> {
+): ChainableFieldComponent<TComponent, TSpecificProps, TOmit> {
   const buildFieldComponent = (
     fieldOptions?: FieldOptions,
-  ): BaseFieldComponent<TComponent, TSpecificProps, TOmit> => {
-    return (
-      allProps: FieldComponentProps<TComponent, TSpecificProps, TOmit>,
-    ) => {
-      const { fieldDisplay, ...restProps } = allProps
+  ): FieldComponent<TComponent, TSpecificProps, TOmit> => {
+    return (allProps: ComponentProps<TComponent, TSpecificProps, TOmit>) => {
+      const { labels, ...restProps } = allProps
       const formField = useFormField<TValue>(restProps, {
-        fieldDisplay,
+        labels,
         ...fieldOptions,
       })
 
       return render({
         formField,
-        props: restProps as FieldRendererProps<
-          TComponent,
-          TSpecificProps,
-          TOmit
-        >,
+        props: restProps as RendererProps<TComponent, TSpecificProps, TOmit>,
       })
     }
   }
 
-  const component = buildFieldComponent(options) as FieldComponentWithChaining<
+  const component = buildFieldComponent(options) as ChainableFieldComponent<
     TComponent,
     TSpecificProps,
     TOmit
