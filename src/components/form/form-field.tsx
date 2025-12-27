@@ -88,29 +88,19 @@ const FormField = ({
       </FieldContent>
     )
 
-    renderField = controlFirst ? (
+    renderField = (
       <>
-        {fieldControlElement}
+        {controlFirst && fieldControlElement}
         {fieldContent}
-      </>
-    ) : (
-      <>
-        {fieldContent}
-        {fieldControlElement}
+        {!controlFirst && fieldControlElement}
       </>
     )
   } else if (hasDescription) {
-    renderField = controlFirst ? (
+    renderField = (
       <>
+        {!controlFirst && labelNode}
         {fieldControlElement}
-        {labelNode}
-        {descNode}
-        {errorElement}
-      </>
-    ) : (
-      <>
-        {labelNode}
-        {fieldControlElement}
+        {controlFirst && labelNode}
         {descNode}
         {errorElement}
       </>
@@ -123,15 +113,11 @@ const FormField = ({
       </>
     )
 
-    renderField = controlFirst ? (
+    renderField = (
       <>
-        {fieldControlElement}
+        {controlFirst && fieldControlElement}
         {content}
-      </>
-    ) : (
-      <>
-        {content}
-        {fieldControlElement}
+        {!controlFirst && fieldControlElement}
       </>
     )
   }
