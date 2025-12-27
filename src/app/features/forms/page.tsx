@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import EasyForm from '@/components/form/easy-form'
+import EasyForm from '@/app/features/forms/test-form'
 
 const Page = () => {
   return (

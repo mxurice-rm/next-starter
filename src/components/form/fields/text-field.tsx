@@ -1,7 +1,7 @@
 import FormField from '@/components/form/form-field'
 import React from 'react'
 import { Input } from '@/components/ui/input'
-import { MaybeInputGroup } from '@/components/form/internal/maybe-input-group'
+import { MaybeInputGroup } from '@/components/form/helpers/maybe-input-group'
 import { InputGroupInput } from '@/components/ui/input-group'
 import { FieldAddon } from '@/lib/form/types'
 import { createFormField } from '@/lib/form'
