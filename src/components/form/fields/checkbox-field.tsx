@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox'
 import FormField from '@/components/form/form-field'
-import { createFormField } from '@/lib/form/create-form-field'
+import { createFormField } from '@/lib/form'
 
 const CheckboxField = createFormField<typeof Checkbox, boolean | string[]>(
   ({ formField, props }) => {
@@ -40,7 +40,7 @@ const CheckboxField = createFormField<typeof Checkbox, boolean | string[]>(
         formField={formField}
         config={{
           controlFirst: true,
-          groupFieldContent: true,
+          wrapContent: true,
           orientation: 'horizontal',
         }}
       >

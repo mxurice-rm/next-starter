@@ -1,7 +1,7 @@
 import FormField from '@/components/form/form-field'
 import { RadioGroupItem } from '@/components/ui/radio-group'
 import { FieldLabel } from '@/components/ui/field'
-import { createFormField } from '@/lib/form/create-form-field'
+import { createFormField } from '@/lib/form'
 
 type RadioFieldProps = {
   value: string
@@ -20,7 +20,7 @@ const RadioField = createFormField<
       formField={formField}
       config={{
         controlFirst: true,
-        groupFieldContent: true,
+        wrapContent: true,
         orientation: 'horizontal',
       }}
     >

@@ -1,6 +1,6 @@
 import { Switch } from '@/components/ui/switch'
 import FormField from '@/components/form/form-field'
-import { createFormField } from '@/lib/form/create-form-field'
+import { createFormField } from '@/lib/form'
 
 const SwitchField = createFormField<typeof Switch, boolean>(
   ({ formField, props }) => {
@@ -9,7 +9,7 @@ const SwitchField = createFormField<typeof Switch, boolean>(
     return (
       <FormField
         formField={formField}
-        config={{ orientation: 'horizontal', groupFieldContent: true }}
+        config={{ orientation: 'horizontal', wrapContent: true }}
       >
         {(FieldControl) => (
           <FieldControl>

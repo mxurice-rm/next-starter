@@ -1,33 +1,27 @@
-import React, { ReactElement } from 'react'
+import { ReactElement } from 'react'
 import { AnyFieldApi } from '@tanstack/react-form'
 
-export type FormFieldState = {
+export type FieldState = {
   field: AnyFieldApi
   inputId: string
   isInvalid: boolean
   isArrayField: boolean
-} & FormFieldDisplay
+  labels: FieldLabels
+}
 
-export type FormFieldDisplay = {
+export type FieldLabels = {
   label?: string
   description?: string
   placeholder?: string
 }
 
-export type FormFieldBaseProps<
-  TComponent extends React.ElementType,
-  TOmit extends keyof React.ComponentProps<TComponent> = never,
-> = {
-  fieldDisplay?: FormFieldDisplay
-} & Omit<React.ComponentProps<TComponent>, TOmit>
-
-export type FormFieldConfig = {
+export type FieldLayout = {
   orientation?: 'vertical' | 'horizontal' | 'responsive'
-  groupFieldContent?: boolean
+  wrapContent?: boolean
   controlFirst?: boolean
 }
 
-export type InputGroupAddon = {
+export type FieldAddon = {
   content: ReactElement
-  align: 'inline-start' | 'inline-end' | 'block-start' | 'block-end'
+  position: 'inline-start' | 'inline-end' | 'block-start' | 'block-end'
 }

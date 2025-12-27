@@ -76,31 +76,12 @@ const EasyForm = () => {
     >
       <FieldGroup>
         {/* ----------------- NAME FIELD (Input) ----------------- */}
-        <form.AppField
-          name="name"
-          validators={{
-            onChange: ({ value }) => {
-              if (!value) return 'Name ist erforderlich'
-              if (value.length < 2)
-                return {
-                  message: 'Name muss mindestens 2 Zeichen lang sein',
-                }
-              return undefined
-            },
-            onBlur: ({ value }) => {
-              if (value && value.length > 20)
-                return {
-                  message: 'Name darf maximal 20 Zeichen lang sein',
-                }
-              return undefined
-            },
-          }}
-        >
+        <form.AppField name="name">
           {(field) => {
             return (
               <field.TextField
                 autoComplete={field.name}
-                fieldDisplay={{
+                labels={{
                   description: 'Lorem ipsum dolor sit amet, consetetur',
                   label: 'Name',
                   placeholder: 'Max Mustermann',
@@ -108,7 +89,7 @@ const EasyForm = () => {
                 addons={[
                   {
                     content: <UserIcon />,
-                    align: 'inline-start',
+                    position: 'inline-start',
                   },
                 ]}
               />
@@ -132,7 +113,7 @@ const EasyForm = () => {
         >
           {(field) => (
             <field.TextareaField
-              fieldDisplay={{
+              labels={{
                 label: 'Beschreibung',
                 placeholder: 'Beschreibung...',
                 description: 'lorem ipsum',
@@ -144,7 +125,7 @@ const EasyForm = () => {
                       120 characters left
                     </InputGroupText>
                   ),
-                  align: 'block-end',
+                  position: 'block-end',
                 },
               ]}
             />
@@ -180,7 +161,7 @@ const EasyForm = () => {
                     <field.CheckboxField
                       key={notification.id}
                       id={`${field.name}-${notification.id}`}
-                      fieldDisplay={{
+                      labels={{
                         label: notification.label,
                         description: notification.description,
                       }}
@@ -233,7 +214,7 @@ const EasyForm = () => {
                     <field.RadioField
                       key={plan.value}
                       value={plan.value}
-                      fieldDisplay={{
+                      labels={{
                         label: plan.label,
                         description: plan.description,
                       }}
@@ -262,7 +243,7 @@ const EasyForm = () => {
           {(field) => {
             return (
               <field.CheckboxField
-                fieldDisplay={{
+                labels={{
                   label: 'Terms',
                   description:
                     'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut',
@@ -288,7 +269,7 @@ const EasyForm = () => {
           {(field) => {
             return (
               <field.SwitchField
-                fieldDisplay={{
+                labels={{
                   label: 'Multi-factor authentication',
                   description:
                     'Enable multi-factor authentication. If you do not have a two-factor device, you can use a one-time code sent to your email.',
@@ -321,7 +302,7 @@ const EasyForm = () => {
           {(field) => {
             return (
               <field.SelectField
-                fieldDisplay={{
+                labels={{
                   label: 'Billing Period',
                   description: 'Choose how often you want to be billed.',
                   placeholder: 'Select',

@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import React from 'react'
-import { createFormField } from '@/lib/form/create-form-field'
+import { createFormField } from '@/lib/form'
 
 type SelectFieldProps = {
   options?: { value: string; label: string }[]
@@ -20,7 +20,7 @@ const SelectField = createFormField<
   SelectFieldProps
 >(({ formField, props }) => {
   const { options, children, ...restProps } = props
-  const { field, placeholder } = formField
+  const { field, labels } = formField
 
   return (
     <FormField formField={formField}>
@@ -32,7 +32,7 @@ const SelectField = createFormField<
         >
           <FieldControl>
             <SelectTrigger {...restProps}>
-              <SelectValue placeholder={placeholder} />
+              <SelectValue placeholder={labels.placeholder} />
             </SelectTrigger>
           </FieldControl>
           <SelectContent>

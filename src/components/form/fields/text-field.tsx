@@ -3,11 +3,11 @@ import React from 'react'
 import { Input } from '@/components/ui/input'
 import { MaybeInputGroup } from '@/components/form/internal/maybe-input-group'
 import { InputGroupInput } from '@/components/ui/input-group'
-import { InputGroupAddon } from '@/lib/form/types'
-import { createFormField } from '@/lib/form/create-form-field'
+import { FieldAddon } from '@/lib/form/types'
+import { createFormField } from '@/lib/form'
 
 type TextFieldProps = {
-  addons?: InputGroupAddon[]
+  addons?: FieldAddon[]
 }
 
 const TextField = createFormField<
@@ -28,7 +28,7 @@ const TextField = createFormField<
     onChange,
     onBlur: formField.field.handleBlur,
     name: formField.field.name,
-    placeholder: formField.placeholder,
+    placeholder: formField.labels.placeholder,
     ...restProps,
   }
 

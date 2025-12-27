@@ -2,12 +2,12 @@ import FormField from '@/components/form/form-field'
 import React from 'react'
 import { MaybeInputGroup } from '@/components/form/internal/maybe-input-group'
 import { InputGroupTextarea } from '@/components/ui/input-group'
-import { InputGroupAddon } from '@/lib/form/types'
+import { FieldAddon } from '@/lib/form/types'
 import { Textarea } from '@/components/ui/textarea'
-import { createFormField } from '@/lib/form/create-form-field'
+import { createFormField } from '@/lib/form'
 
 type TextareaFieldProps = {
-  addons?: InputGroupAddon[]
+  addons?: FieldAddon[]
 }
 
 const TextareaField = createFormField<
@@ -28,7 +28,7 @@ const TextareaField = createFormField<
     onChange,
     onBlur: formField.field.handleBlur,
     name: formField.field.name,
-    placeholder: formField.placeholder,
+    placeholder: formField.labels.placeholder,
     ...restProps,
   }
 

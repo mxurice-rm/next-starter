@@ -5,7 +5,7 @@ import {
   FieldError,
   FieldLabel,
 } from '@/components/ui/field'
-import { FormFieldConfig, FormFieldState } from '@/lib/form/types'
+import { FieldLayout, FieldState } from '@/lib/form/types'
 import React, { useContext, useEffect, useRef } from 'react'
 import { FieldControlContext } from '@/context/form-context'
 
@@ -40,13 +40,13 @@ const FormField = ({
   formField,
 }: {
   suppressErrors?: boolean
-  config?: FormFieldConfig
-  formField: FormFieldState
+  config?: FieldLayout
+  formField: FieldState
   children: (FieldControl: typeof FieldControlComponent) => React.ReactElement
 }) => {
-  const { field, isInvalid, isArrayField, inputId, description, label } =
-    formField
-  const { orientation, groupFieldContent, controlFirst } = config ?? {}
+  const { field, isInvalid, isArrayField, inputId, labels } = formField
+  const { label, description } = labels
+  const { orientation, wrapContent, controlFirst } = config ?? {}
 
   const errors = field.state.meta.errors
   const errorsSuppressed = suppressErrors ?? isArrayField
@@ -63,7 +63,7 @@ const FormField = ({
   const errorElement =
     isInvalid && errors && !errorsSuppressed ? (
       <FieldError
-        errors={errors.map((error) =>
+        errors={errors.map((error: string | { message: string }) =>
           typeof error === 'string' ? { message: error } : error,
         )}
       />
@@ -72,7 +72,7 @@ const FormField = ({
   const fieldControlElement = children(FieldControlComponent)
 
   const hasDescription = Boolean(description)
-  const useFieldContent = Boolean(description && groupFieldContent)
+  const useFieldContent = Boolean(description && wrapContent)
 
   const labelNode = label ? labelElement : null
   const descNode = hasDescription ? descriptionElement : null

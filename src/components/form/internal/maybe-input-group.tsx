@@ -1,12 +1,12 @@
 import { ReactNode } from 'react'
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
-import { InputGroupAddon as TInputGroupAddon } from '@/lib/form/types'
+import { FieldAddon } from '@/lib/form/types'
 
 export const MaybeInputGroup = ({
   addons,
   children,
 }: {
-  addons?: TInputGroupAddon[]
+  addons?: FieldAddon[]
   children: (hasAddons: boolean) => ReactNode
 }) => {
   const hasAddons = addons && addons.length > 0
@@ -18,7 +18,7 @@ export const MaybeInputGroup = ({
   return (
     <InputGroup>
       {addons.map((addon, index) => (
-        <InputGroupAddon key={index} align={addon.align}>
+        <InputGroupAddon key={index} align={addon.position}>
           {addon.content}
         </InputGroupAddon>
       ))}
