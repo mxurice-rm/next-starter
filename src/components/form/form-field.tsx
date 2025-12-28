@@ -106,18 +106,12 @@ const FormField = ({
       </>
     )
   } else {
-    const content = (
-      <>
-        {labelNode}
-        {errorElement}
-      </>
-    )
-
     renderField = (
       <>
-        {controlFirst && fieldControlElement}
-        {content}
-        {!controlFirst && fieldControlElement}
+        {!controlFirst && labelNode}
+        {fieldControlElement}
+        {controlFirst && labelNode}
+        {errorElement}
       </>
     )
   }
