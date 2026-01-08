@@ -20,7 +20,7 @@ const SelectField = createFormField<
   SelectFieldProps
 >(({ formField, props }) => {
   const { options, children, ...restProps } = props
-  const { field, labels } = formField
+  const { field, texts } = formField
 
   return (
     <FormField formField={formField}>
@@ -32,7 +32,7 @@ const SelectField = createFormField<
         >
           <FieldControl>
             <SelectTrigger {...restProps}>
-              <SelectValue placeholder={labels.placeholder} />
+              <SelectValue placeholder={texts.placeholder} />
             </SelectTrigger>
           </FieldControl>
           <SelectContent>

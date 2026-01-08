@@ -25,10 +25,11 @@ const TextField = createFormField<
   }
 
   const inputProps = {
+    value: formField.field.state.value,
     onChange,
     onBlur: formField.field.handleBlur,
     name: formField.field.name,
-    placeholder: formField.labels.placeholder,
+    placeholder: formField.texts.placeholder,
     ...restProps,
   }
 

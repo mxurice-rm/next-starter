@@ -1,5 +1,5 @@
 import React from 'react'
-import { FieldLabels, FieldState } from './types'
+import { FieldTexts, FieldState } from './types'
 import { useFormField } from '@/hooks/use-form-field'
 
 export type FieldOptions = {
@@ -21,7 +21,7 @@ type BaseProps<
   TComponent extends React.ElementType,
   TOmit extends keyof React.ComponentProps<TComponent> = never,
 > = {
-  labels?: FieldLabels
+  texts?: FieldTexts
 } & Omit<React.ComponentProps<TComponent>, TOmit>
 
 type ComponentProps<
@@ -69,9 +69,9 @@ export function createFormField<
     fieldOptions?: FieldOptions,
   ): FieldComponent<TComponent, TSpecificProps, TOmit> => {
     return (allProps: ComponentProps<TComponent, TSpecificProps, TOmit>) => {
-      const { labels, ...restProps } = allProps
+      const { texts, ...restProps } = allProps
       const formField = useFormField<TValue>(restProps, {
-        labels,
+        texts,
         ...fieldOptions,
       })
 

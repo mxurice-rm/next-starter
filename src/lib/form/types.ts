@@ -6,11 +6,12 @@ export type FieldState = {
   inputId: string
   isInvalid: boolean
   isArrayField: boolean
-  labels: FieldLabels
+  texts: FieldTexts
 }
 
-export type FieldLabels = {
+export type FieldTexts = {
   label?: string
+  link?: { text: string; to?: string }
   description?: string
   placeholder?: string
 }

@@ -8,6 +8,7 @@ import {
 import { FieldLayout, FieldState } from '@/lib/form/types'
 import React, { useContext, useEffect, useRef } from 'react'
 import { FieldControlContext } from '@/context/form-context'
+import Link from 'next/link'
 
 const FieldControlComponent = ({
   children,
@@ -44,8 +45,8 @@ const FormField = ({
   formField: FieldState
   children: (FieldControl: typeof FieldControlComponent) => React.ReactElement
 }) => {
-  const { field, isInvalid, isArrayField, inputId, labels } = formField
-  const { label, description } = labels
+  const { field, isInvalid, isArrayField, inputId, texts } = formField
+  const { label, link, description } = texts
   const { orientation, wrapContent, controlFirst } = config ?? {}
 
   const errors = field.state.meta.errors
@@ -57,7 +58,19 @@ const FormField = ({
     controlRef.current = element
   }
 
-  const labelElement = <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+  const labelElement = link?.text ? (
+    <div className="flex w-full items-center justify-between">
+      <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+      <Link
+        className="text-primary hover:text-primary/80 text-sm underline underline-offset-3 hover:cursor-pointer"
+        href={link.to ?? ''}
+      >
+        {link.text}
+      </Link>
+    </div>
+  ) : (
+    <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+  )
   const descriptionElement = <FieldDescription>{description}</FieldDescription>
 
   const errorElement =
@@ -106,18 +119,12 @@ const FormField = ({
       </>
     )
   } else {
-    const content = (
-      <>
-        {labelNode}
-        {errorElement}
-      </>
-    )
-
     renderField = (
       <>
-        {controlFirst && fieldControlElement}
-        {content}
-        {!controlFirst && fieldControlElement}
+        {!controlFirst && labelNode}
+        {fieldControlElement}
+        {controlFirst && labelNode}
+        {errorElement}
       </>
     )
   }
