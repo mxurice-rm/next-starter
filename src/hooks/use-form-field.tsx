@@ -1,25 +1,16 @@
 import { useId } from 'react'
 import { useFieldContext } from '@/context/form-context'
-import { FieldLabels, FieldState } from '@/lib/form/types'
-
-interface UseFormFieldProps {
-  id?: string
-}
-
-interface UseFormFieldOptions {
-  isIteratedField?: boolean
-  labels?: FieldLabels
-}
+import { FieldState, FieldTexts } from '@/lib/form/types'
 
 export const useFormField = <T = unknown,>(
-  props?: UseFormFieldProps,
-  options?: UseFormFieldOptions,
+  props?: { id?: string },
+  options?: { isIteratedField?: boolean; texts?: FieldTexts },
 ): FieldState => {
   const field = useFieldContext<T>()
   const reactId = useId()
 
   const { id } = props ?? {}
-  const { isIteratedField = false, labels = {} } = options ?? {}
+  const { isIteratedField = false, texts = {} } = options ?? {}
 
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
   const isArrayField =
@@ -36,6 +27,6 @@ export const useFormField = <T = unknown,>(
     inputId,
     isInvalid,
     isArrayField,
-    labels,
+    texts,
   }
 }

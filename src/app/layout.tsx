@@ -1,8 +1,19 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Manrope } from 'next/font/google'
+import { Geist, Geist_Mono, Inter } from 'next/font/google'
+import React from 'react'
 
-const manrope = Manrope({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
   title: 'Next.js Starter',
@@ -15,8 +26,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${manrope.className} antialiased`}>{children}</body>
+    <html lang="en" className={inter.variable}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   )
 }

@@ -21,21 +21,24 @@ function FieldSet({ className, ...props }: React.ComponentProps<'fieldset'>) {
   )
 }
 
+const legendVariantStyles = {
+  legend: 'text-base',
+  label: 'text-sm',
+  title: 'text-base md:text-xl font-bold',
+} as const
+
 function FieldLegend({
   className,
   variant = 'legend',
   ...props
-}: React.ComponentProps<'legend'> & { variant?: 'legend' | 'label' }) {
+}: React.ComponentProps<'legend'> & {
+  variant?: 'legend' | 'label' | 'title'
+}) {
   return (
     <legend
       data-slot="field-legend"
       data-variant={variant}
-      className={cn(
-        'mb-2 font-medium',
-        'data-[variant=legend]:text-base',
-        'data-[variant=label]:text-sm',
-        className,
-      )}
+      className={cn('font-medium', legendVariantStyles[variant], className)}
       {...props}
     />
   )
@@ -46,7 +49,7 @@ function FieldGroup({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="field-group"
       className={cn(
-        'group/field-group @container/field-group flex w-full flex-col gap-7 data-[slot=checkbox-group]:gap-3 [&>[data-slot=field-group]]:gap-4',
+        'group/field-group @container/field-group flex w-full flex-col gap-5 data-[slot=checkbox-group]:gap-3 [&>[data-slot=field-group]]:gap-4',
         className,
       )}
       {...props}
@@ -55,13 +58,13 @@ function FieldGroup({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 const fieldVariants = cva(
-  'group/field flex w-full gap-3 data-[invalid=true]:text-destructive',
+  'group/field flex w-full gap-1.5 data-[invalid=true]:text-destructive',
   {
     variants: {
       orientation: {
         vertical: ['flex-col [&>*]:w-full [&>.sr-only]:w-auto'],
         horizontal: [
-          'flex-row items-center',
+          'flex-row items-center gap-3',
           '[&>[data-slot=field-label]]:flex-auto',
           'has-[>[data-slot=field-content]]:items-start has-[>[data-slot=field-content]]:[&>[role=checkbox],[role=radio]]:mt-px',
         ],
