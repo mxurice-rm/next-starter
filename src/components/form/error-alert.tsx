@@ -8,18 +8,20 @@ const ErrorAlert = () => {
   return (
     <form.Subscribe
       selector={(state) => ({
-        errorMap: state.errorMap,
-        isDirty: state.isDirty,
+        formError: state.errorMap.onSubmit?.form,
+        submissionAttempts: state.submissionAttempts,
       })}
     >
-      {({ errorMap, isDirty }) => {
-        return errorMap.onSubmit?.form && isDirty ? (
+      {({ formError, submissionAttempts }) => {
+        if (!formError || submissionAttempts === 0) return null
+
+        return (
           <Alert variant="destructive">
             <AlertCircleIcon />
             <AlertTitle>Es ist ein Fehler aufgetreten!</AlertTitle>
-            <AlertDescription>{errorMap.onSubmit.form}</AlertDescription>
+            <AlertDescription>{formError}</AlertDescription>
           </Alert>
-        ) : null
+        )
       }}
     </form.Subscribe>
   )
