@@ -1,6 +1,6 @@
 import React from 'react'
 import { FieldTexts, FieldState } from './types'
-import { useFormField } from '@/hooks/use-form-field'
+import { useFormField } from '@/shared/form/hooks/use-form-field'
 
 export type FieldOptions = {
   isIteratedField?: boolean

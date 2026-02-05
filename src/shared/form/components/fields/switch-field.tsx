@@ -1,6 +1,6 @@
 import { Switch } from '@/components/ui/switch'
-import FormField from '@/components/form/form-field'
-import { createFormField } from '@/lib/form'
+import FormField from '@/shared/form/components/form-field'
+import { createFormField } from '@/shared/form/lib'
 
 const SwitchField = createFormField<typeof Switch, boolean>(
   ({ formField, props }) => {

@@ -1,4 +1,4 @@
-import FormField from '@/components/form/form-field'
+import FormField from '@/shared/form/components/form-field'
 import {
   Select,
   SelectContent,
@@ -7,9 +7,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import React from 'react'
-import { createFormField } from '@/lib/form'
+import { createFormField } from '@/shared/form/lib'
 
-type SelectFieldProps = {
+interface SelectFieldProps {
   options?: { value: string; label: string }[]
   children?: React.ReactNode
 }
@@ -35,7 +35,7 @@ const SelectField = createFormField<
               <SelectValue placeholder={texts.placeholder} />
             </SelectTrigger>
           </FieldControl>
-          <SelectContent>
+          <SelectContent position="popper">
             {children ||
               options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>

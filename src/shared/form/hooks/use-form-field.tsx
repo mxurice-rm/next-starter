@@ -1,6 +1,6 @@
 import { useId } from 'react'
-import { useFieldContext } from '@/context/form-context'
-import { FieldState, FieldTexts } from '@/lib/form/types'
+import { useFieldContext } from '@/shared/form/context/form-context'
+import { FieldState, FieldTexts } from '@/shared/form/lib/types'
 
 export const useFormField = <T = unknown,>(
   props?: { id?: string },
