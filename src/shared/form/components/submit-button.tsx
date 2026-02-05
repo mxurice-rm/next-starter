@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import React from 'react'
-import { useFormContext } from '@/context/form-context'
+import { useFormContext } from '@/shared/form/context/form-context'
 import { Spinner } from '@/components/ui/spinner'
 
 const SubmitButton = ({

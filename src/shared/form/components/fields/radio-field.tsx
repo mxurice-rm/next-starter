@@ -1,9 +1,9 @@
-import FormField from '@/components/form/form-field'
+import FormField from '@/shared/form/components/form-field'
 import { RadioGroupItem } from '@/components/ui/radio-group'
 import { FieldLabel } from '@/components/ui/field'
-import { createFormField } from '@/lib/form'
+import { createFormField } from '@/shared/form/lib'
 
-type RadioFieldProps = {
+interface RadioFieldProps {
   value: string
   asCard?: boolean
 }

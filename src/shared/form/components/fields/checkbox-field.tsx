@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox'
-import FormField from '@/components/form/form-field'
-import { createFormField } from '@/lib/form'
+import FormField from '@/shared/form/components/form-field'
+import { createFormField } from '@/shared/form/lib'
 
 const CheckboxField = createFormField<typeof Checkbox, boolean | string[]>(
   ({ formField, props }) => {

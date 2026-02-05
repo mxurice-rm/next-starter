@@ -5,9 +5,9 @@ import {
   FieldError,
   FieldLabel,
 } from '@/components/ui/field'
-import { FieldLayout, FieldState } from '@/lib/form/types'
+import { FieldLayout, FieldState } from '@/shared/form/lib/types'
 import React, { useContext, useEffect, useRef } from 'react'
-import { FieldControlContext } from '@/context/form-context'
+import { FieldControlContext } from '@/shared/form/context/form-context'
 import Link from 'next/link'
 
 const FieldControlComponent = ({

@@ -1,5 +1,5 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { useFormContext } from '@/context/form-context'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useFormContext } from '@/shared/form/context/form-context'
 import { AlertCircleIcon } from 'lucide-react'
 
 const ErrorAlert = () => {
@@ -18,7 +18,6 @@ const ErrorAlert = () => {
         return (
           <Alert variant="destructive">
             <AlertCircleIcon />
-            <AlertTitle>Es ist ein Fehler aufgetreten!</AlertTitle>
             <AlertDescription>{formError}</AlertDescription>
           </Alert>
         )

@@ -1,12 +1,12 @@
-import FormField from '@/components/form/form-field'
+import FormField from '@/shared/form/components/form-field'
 import React from 'react'
-import { MaybeInputGroup } from '@/components/form/helpers/maybe-input-group'
+import { MaybeInputGroup } from '@/shared/form/components/helpers/maybe-input-group'
 import { InputGroupTextarea } from '@/components/ui/input-group'
-import { FieldAddon } from '@/lib/form/types'
+import { FieldAddon } from '@/shared/form/lib/types'
 import { Textarea } from '@/components/ui/textarea'
-import { createFormField } from '@/lib/form'
+import { createFormField } from '@/shared/form/lib'
 
-type TextareaFieldProps = {
+interface TextareaFieldProps {
   addons?: FieldAddon[]
 }
 
