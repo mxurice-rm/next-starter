@@ -11,7 +11,7 @@ services:
     <<: *nginx-base
     profiles: [ "internal" ]
     ports:
-      - '80:80'
+      - '6001:80'
     volumes:
       - ./nginx/nginx.internal.conf:/etc/nginx/nginx.conf:ro
 

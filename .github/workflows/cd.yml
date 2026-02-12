@@ -1,0 +1,92 @@
+name: Build & deploy
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Build new image before deploy'
+        required: false
+        type: boolean
+        default: true
+      profile:
+        description: 'NGINX profile'
+        required: true
+        type: choice
+        options:
+          - internal
+          - ssl
+      tag:
+        description: 'Image tag to deploy (e.g. latest, v1.0.0)'
+        required: false
+        default: 'latest'
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+  # Default deploy settings (used on push to main, overridden by manual trigger)
+  DEFAULT_PROFILE: internal
+  DEFAULT_TAG: latest
+
+jobs:
+  code-analysis:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/code-analysis
+
+  docker:
+    needs: code-analysis
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docker-build-push
+        with:
+          image-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+
+  deploy:
+    needs: [code-analysis, docker]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+    if: >-
+      ${{
+        always()
+        && vars.DEPLOY_PATH != ''
+        && !contains(needs.*.result, 'failure')
+        && !contains(needs.*.result, 'cancelled')
+        && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main')
+      }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/deploy
+        with:
+          ssh-host: ${{ secrets.DEPLOY_SSH_HOST }}
+          ssh-user: ${{ secrets.DEPLOY_SSH_USER }}
+          ssh-key: ${{ secrets.DEPLOY_SSH_KEY }}
+          deploy-path: ${{ vars.DEPLOY_PATH }}
+          profile: ${{ inputs.profile || env.DEFAULT_PROFILE }}
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.tag || env.DEFAULT_TAG }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          ghcr-user: ${{ github.actor }}

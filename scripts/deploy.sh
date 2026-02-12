@@ -3,6 +3,7 @@
 # ═══════════════════════════════════════════════════════════════
 #  Production Deployment Script
 #  Usage: ./deploy.sh [--profile <internal|ssl>] [--rebuild] [--init]
+#                     [--remote] [--image <url>]
 # ═══════════════════════════════════════════════════════════════
 
 # Change to project root directory
@@ -13,6 +14,8 @@ cd "$SCRIPT_DIR/.." || exit 1
 PROFILE=""
 REBUILD=false
 FORCE_INIT=false
+REMOTE=false
+DOCKER_IMAGE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -28,9 +31,18 @@ while [[ $# -gt 0 ]]; do
             FORCE_INIT=true
             shift
             ;;
+        --remote)
+            REMOTE=true
+            shift
+            ;;
+        --image)
+            DOCKER_IMAGE="$2"
+            shift 2
+            ;;
         *)
             echo "Unknown option: $1"
             echo "Usage: $0 [--profile <internal|ssl>] [--rebuild] [--init]"
+            echo "       $0 --remote --image <url> --profile <internal|ssl>"
             exit 1
             ;;
     esac
@@ -68,7 +80,9 @@ readonly S_ROCKET="🚀"
 # ───────────────────────────────────────────────────────────────
 
 print_header() {
-    clear
+    if [ "$REMOTE" != true ]; then
+        clear
+    fi
     echo ""
     echo -e "${C_BOLD}${C_PRIMARY}  ╭──────────────────────────────────────────────────────────╮${C_RESET}"
     echo -e "${C_BOLD}${C_PRIMARY}  │                                                          │${C_RESET}"
@@ -76,6 +90,10 @@ print_header() {
     echo -e "${C_BOLD}${C_PRIMARY}  │                                                          │${C_RESET}"
     echo -e "${C_BOLD}${C_PRIMARY}  ╰──────────────────────────────────────────────────────────╯${C_RESET}"
     echo ""
+    if [ "$REMOTE" = true ]; then
+        echo -e "  ${C_INFO}Mode: ${C_BOLD}Remote Deploy${C_RESET} ${C_DIM}(pull from registry)${C_RESET}"
+        echo ""
+    fi
 }
 
 print_step() {
@@ -173,7 +191,7 @@ select_profile() {
     echo ""
     echo -e "  ${C_BOLD}${C_PRIMARY}Select NGINX profile:${C_RESET}"
     echo ""
-    echo -e "    ${C_PRIMARY}1)${C_RESET} ${C_BOLD}internal${C_RESET} - HTTP only (port 80)"
+    echo -e "    ${C_PRIMARY}1)${C_RESET} ${C_BOLD}internal${C_RESET} - HTTP only"
     echo -e "       ${C_DIM}When a reverse proxy handles SSL (Traefik, Caddy, etc.)${C_RESET}"
     echo ""
     echo -e "    ${C_PRIMARY}2)${C_RESET} ${C_BOLD}ssl${C_RESET}      - HTTPS with SSL certificates (ports 80, 443)"
@@ -199,60 +217,29 @@ select_profile() {
     esac
 }
 
-# Checks if SSL config has placeholders and prompts for domain
-configure_ssl_domain() {
+# Validates that SSL config has no unresolved placeholders
+validate_ssl_domain() {
     local ssl_conf="nginx/nginx.ssl.conf"
 
     if [ ! -f "$ssl_conf" ]; then
         handle_error 4 "nginx.ssl.conf not found"
     fi
 
-    # Check if placeholders still exist
     if grep -q "{{DOMAIN}}" "$ssl_conf"; then
         echo ""
-        echo -e "  ${C_WARNING}${S_WARN}${C_RESET}  SSL configuration contains placeholders"
+        print_error "nginx/nginx.ssl.conf contains unresolved {{DOMAIN}} placeholders"
         echo ""
-        echo -e "  ${C_DIM}Please enter your domain (without www.)${C_RESET}"
-        echo -e "  ${C_DIM}Example: example.com${C_RESET}"
+        echo -e "    ${C_DIM}Please replace all {{DOMAIN}} occurrences in nginx/nginx.ssl.conf${C_RESET}"
+        echo -e "    ${C_DIM}with your actual domain before deploying.${C_RESET}"
         echo ""
-        echo -ne "  ${C_BOLD}Domain:${C_RESET} "
-
-        local domain
-        read -r domain
-
-        # Validate domain
-        if [ -z "$domain" ]; then
-            print_error "Domain cannot be empty"
-            configure_ssl_domain
-            return
-        fi
-
-        # Remove www. if user added it
-        domain="${domain#www.}"
-
-        # Basic domain validation (alphanumeric, dots, hyphens)
-        if ! [[ "$domain" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$ ]]; then
-            print_error "Invalid domain format"
-            configure_ssl_domain
-            return
-        fi
-
-        print_action "Replacing placeholders with: ${domain}"
-
-        # Replace all {{DOMAIN}} with the actual domain
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|{{DOMAIN}}|${domain}|g" "$ssl_conf"
-        else
-            sed -i "s|{{DOMAIN}}|${domain}|g" "$ssl_conf"
-        fi
-
-        print_success "SSL configuration updated for ${domain}"
-    else
-        # Domain already configured
-        local configured_domain
-        configured_domain=$(grep -m1 "server_name" "$ssl_conf" | sed 's/.*server_name \([^ ]*\).*/\1/')
-        print_success "SSL domain already configured: ${configured_domain}"
+        echo -e "    ${C_DIM}Example: sed -i 's|{{DOMAIN}}|example.com|g' nginx/nginx.ssl.conf${C_RESET}"
+        echo ""
+        exit 1
     fi
+
+    local configured_domain
+    configured_domain=$(grep -m1 "server_name" "$ssl_conf" | sed 's/.*server_name \([^ ]*\).*/\1/')
+    print_success "SSL domain configured: ${configured_domain}"
 }
 
 # ───────────────────────────────────────────────────────────────
@@ -265,19 +252,43 @@ step_verify_requirements() {
     check_docker_compose
     print_success "Docker Compose is available"
 
-    if [ ! -f "scripts/initialize.sh" ]; then
-        handle_error 1 "scripts/initialize.sh not found"
-    fi
-    print_success "Initialize script found"
+    if [ "$REMOTE" = true ]; then
+        # Remote mode: only need compose file and .env
+        if [ ! -f "docker-compose.prod.yml" ]; then
+            handle_error 1 "docker-compose.prod.yml not found"
+        fi
+        print_success "Production compose file found"
 
-    if [ ! -f "docker-compose.prod.yml" ]; then
-        handle_error 1 "docker-compose.prod.yml not found"
+        if [ ! -f ".env" ]; then
+            handle_error 1 ".env file not found (create it with required secrets)"
+        fi
+        print_success "Environment file found"
+
+        if [ -z "$DOCKER_IMAGE" ]; then
+            handle_error 1 "--image is required in remote mode"
+        fi
+        print_success "Docker image: ${DOCKER_IMAGE}"
+    else
+        # Local mode: need initialize.sh and compose file
+        if [ ! -f "scripts/initialize.sh" ]; then
+            handle_error 1 "scripts/initialize.sh not found"
+        fi
+        print_success "Initialize script found"
+
+        if [ ! -f "docker-compose.prod.yml" ]; then
+            handle_error 1 "docker-compose.prod.yml not found"
+        fi
+        print_success "Production compose file found"
     fi
-    print_success "Production compose file found"
 }
 
 step_initialize_project() {
     print_step 2 "Initializing Project"
+
+    if [ "$REMOTE" = true ]; then
+        print_success "Skipped (remote mode — no local build needed)"
+        return 0
+    fi
 
     # Check if initialization is needed
     if [ "$FORCE_INIT" = false ] && is_project_initialized; then
@@ -302,6 +313,11 @@ step_initialize_project() {
 step_configure_database() {
     print_step 3 "Configuring Database Connection"
 
+    if [ "$REMOTE" = true ]; then
+        print_success "Skipped (remote mode — .env is pre-configured on server)"
+        return 0
+    fi
+
     if [ ! -f ".env" ]; then
         handle_error 3 ".env file not found. Initialization may have failed."
     fi
@@ -325,6 +341,9 @@ step_select_profile() {
     print_step 4 "NGINX Profile Selection"
 
     if [ -z "$PROFILE" ]; then
+        if [ "$REMOTE" = true ]; then
+            handle_error 4 "--profile is required in remote mode"
+        fi
         select_profile
     fi
 
@@ -335,47 +354,77 @@ step_select_profile() {
 
     print_success "Selected profile: ${C_BOLD}${PROFILE}${C_RESET}"
 
-    # If SSL profile, check and configure domain
+    # If SSL profile, validate that domain placeholders are resolved
     if [ "$PROFILE" = "ssl" ]; then
-        configure_ssl_domain
+        validate_ssl_domain
     fi
 }
 
 step_start_production() {
     print_step 5 "Starting Production Containers"
 
-    if [ "$REBUILD" = true ]; then
-        print_action "Building and starting containers with profile: ${PROFILE}..."
-        print_info "Rebuild forced - building from scratch"
-    else
+    local compose_cmd="docker compose -f docker-compose.prod.yml --profile $PROFILE"
+
+    if [ "$REMOTE" = true ]; then
+        # Remote mode: export image, pull, then start
+        export DOCKER_IMAGE
+        print_action "Pulling image: ${DOCKER_IMAGE}..."
+        echo ""
+
+        if ! ${compose_cmd} pull nextjs; then
+            echo ""
+            handle_error 5 "Failed to pull image: ${DOCKER_IMAGE}"
+        fi
+
+        echo ""
+        print_success "Image pulled successfully"
+        print_action "Stopping existing containers..."
+        ${compose_cmd} down 2>/dev/null
         print_action "Starting containers with profile: ${PROFILE}..."
-        print_info "Using existing images (use --rebuild to force rebuild)"
-    fi
-    echo ""
-
-    # Build docker compose command
-    local compose_cmd="docker compose -f docker-compose.prod.yml --profile $PROFILE up -d"
-    if [ "$REBUILD" = true ]; then
-        compose_cmd="$compose_cmd --build"
-    fi
-
-    # Run docker compose with live output
-    if eval "$compose_cmd"; then
         echo ""
-        print_success "All containers started successfully"
-        print_info "Profile: ${PROFILE}"
 
-        # Show only running containers from this profile
-        echo ""
-        print_action "Running containers:"
-        docker compose -f docker-compose.prod.yml --profile "$PROFILE" ps --format "table {{.Service}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null | while IFS= read -r line; do
-            echo -e "    ${C_DIM}${line}${C_RESET}"
-        done
+        if ${compose_cmd} up -d; then
+            echo ""
+            print_success "All containers started successfully"
+            print_info "Profile: ${PROFILE}"
+            print_info "Image: ${DOCKER_IMAGE}"
+        else
+            echo ""
+            handle_error 5 "Docker compose command failed"
+        fi
     else
+        # Local mode: build and start
+        if [ "$REBUILD" = true ]; then
+            print_action "Building and starting containers with profile: ${PROFILE}..."
+            print_info "Rebuild forced - building from scratch"
+        else
+            print_action "Starting containers with profile: ${PROFILE}..."
+            print_info "Using existing images (use --rebuild to force rebuild)"
+        fi
         echo ""
-        print_error "Failed to start production containers"
-        handle_error 5 "Docker compose command failed"
+
+        local up_cmd="${compose_cmd} up -d"
+        if [ "$REBUILD" = true ]; then
+            up_cmd="${up_cmd} --build"
+        fi
+
+        if eval "$up_cmd"; then
+            echo ""
+            print_success "All containers started successfully"
+            print_info "Profile: ${PROFILE}"
+        else
+            echo ""
+            print_error "Failed to start production containers"
+            handle_error 5 "Docker compose command failed"
+        fi
     fi
+
+    # Show running containers
+    echo ""
+    print_action "Running containers:"
+    docker compose -f docker-compose.prod.yml --profile "$PROFILE" ps --format "table {{.Service}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null | while IFS= read -r line; do
+        echo -e "    ${C_DIM}${line}${C_RESET}"
+    done
 }
 
 # ───────────────────────────────────────────────────────────────
