@@ -1,13 +1,13 @@
 # 🚀 Next.js Starter Template
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Next.js-16.0.1-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js">
-  <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React">
-  <img src="https://img.shields.io/badge/TailwindCSS-4.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS">
+  <img src="https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js">
+  <img src="https://img.shields.io/badge/TypeScript-5.9-blue?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React">
+  <img src="https://img.shields.io/badge/TailwindCSS-4.1-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS">
   <div>
-    <img src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
-    <img src="https://img.shields.io/badge/Docker-336791?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+    <img src="https://img.shields.io/badge/PostgreSQL-17-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+    <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
   </div>
 </div>
 
@@ -51,8 +51,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/next-starter.git
-   cd next-starter
+   git clone https://github.com/yourusername/maxam-haustechnik.git
+   cd maxam-haustechnik
    ```
 
 2. **Run automatic installation**
@@ -118,7 +118,7 @@ If you prefer manual installation:
 
 ## 🚢 Production Deployment
 
-This template includes automated deployment scripts for production environments with full Docker containerization.
+This template supports two deployment methods: **manual deployment** (clone repo on server) and **automated deployment** via GitHub Actions CI/CD.
 
 ### Deployment Prerequisites
 
@@ -132,7 +132,7 @@ The deployment script supports two NGINX profiles:
 
 #### **`internal` Profile** - Behind Reverse Proxy
 Use when you have a reverse proxy (Traefik, Caddy, Cloudflare Tunnel, etc.) handling SSL:
-- ✅ HTTP only (port 80)
+- ✅ HTTP only (proxied through external reverse proxy)
 - ✅ No SSL configuration needed
 - ✅ Ideal for microservices architecture
 
@@ -141,30 +141,45 @@ Use when NGINX directly manages SSL certificates:
 - ✅ HTTPS with SSL/TLS (ports 80, 443)
 - ✅ Automatic HTTP to HTTPS redirect
 - ✅ Let's Encrypt ready
-- ⚠️ Requires domain configuration
+- ⚠️ Requires domain configuration (see [SSL Configuration](#-ssl-configuration))
 
-### 🚀 Quick Production Deployment
+### 🔐 SSL Configuration
+
+When using the `ssl` profile, you must replace all `{{DOMAIN}}` placeholders in `nginx/nginx.ssl.conf` with your actual domain **before deploying**:
+
+```bash
+sed -i 's|{{DOMAIN}}|example.com|g' nginx/nginx.ssl.conf
+```
+
+Commit the change so it's available for both manual and automated deployments.
+
+The deployment script validates that no unresolved `{{DOMAIN}}` placeholders remain and will abort if any are found.
+
+**SSL certificates** must be obtained via Certbot before deployment. The NGINX configuration expects certificates at `/etc/letsencrypt/live/<domain>/`.
+
+---
+
+### Option 1: Manual Deployment (Clone Repo)
+
+Clone the full repository on the server and run the deployment script locally.
 
 **First time deployment:**
 
 ```bash
-# Interactive mode (recommended for first deployment)
+git clone https://github.com/yourusername/your-repo.git
+cd your-repo
 ./scripts/deploy.sh
-
-# Or with parameters
-./scripts/deploy.sh --profile internal
-./scripts/deploy.sh --profile ssl
 ```
 
 **The deployment script will:**
 1. ✅ Verify Docker Compose installation
 2. ✅ Initialize project (install packages, setup .env)
 3. ✅ Configure database connection for Docker network
-4. ✅ Prompt for profile selection (internal or ssl)
-5. ✅ For SSL: Prompt for domain configuration
+4. ✅ Prompt for NGINX profile selection
+5. ✅ For SSL: Validate that domain is configured
 6. ✅ Build and start all containers
 
-### 📝 Deployment Script Options
+#### Deployment Script Options
 
 ```bash
 ./scripts/deploy.sh [OPTIONS]
@@ -178,10 +193,11 @@ Options:
 **Examples:**
 
 ```bash
-# Deploy with internal profile (behind reverse proxy)
-./scripts/deploy.sh --profile internal
+# Interactive deployment (recommended for first time)
+./scripts/deploy.sh
 
-# Deploy with SSL profile (direct SSL management)
+# Deploy with specific profile
+./scripts/deploy.sh --profile internal
 ./scripts/deploy.sh --profile ssl
 
 # Force rebuild after code changes
@@ -191,15 +207,99 @@ Options:
 ./scripts/deploy.sh --profile ssl --init --rebuild
 ```
 
-### 🔐 SSL Configuration
+#### Updating after code changes
 
-When using the `ssl` profile for the first time, the script will:
+```bash
+git pull origin main
+./scripts/deploy.sh --profile internal --rebuild
+```
 
-1. **Detect placeholder `{{DOMAIN}}`** in nginx configuration
-2. **Prompt for domain** (e.g., `example.com`)
-3. **Automatically replace** all placeholders with your domain
+---
 
-**⚠️ Important:** When using the SSL profile, you must obtain SSL certificates using Certbot before deployment. The NGINX configuration expects certificates to be available at `/etc/letsencrypt/live/{{DOMAIN}}/`.
+### Option 2: Automated Deployment (GitHub Actions)
+
+The CI/CD pipeline automatically builds Docker images and can deploy them to your server via SSH.
+
+#### Pipeline Overview
+
+```
+Push to main/tag → Code Analysis → Docker Build & Push to GHCR → Deploy to Server
+```
+
+- **On push to `main` or version tags (`v*`):** Runs code analysis, builds the Docker image, pushes it to GHCR, and **automatically deploys** using default settings
+- **On manual trigger (`workflow_dispatch`):** Same pipeline, but with customizable profile, tag, and build options
+
+Auto-deploy only runs when `DEPLOY_PATH` is configured as a repository variable. Remove it to disable automatic deployments.
+
+The default deploy settings are defined at the top of `.github/workflows/cd.yml` and can be easily changed:
+
+```yaml
+env:
+  DEFAULT_PROFILE: internal  # Change to 'ssl' if needed
+  DEFAULT_TAG: latest
+```
+
+#### Required GitHub Configuration
+
+**Repository Variables** (Settings → Variables → Actions):
+
+| Variable | Description | Example |
+|---|---|---|
+| `NEXT_PUBLIC_APP_URL` | Full application URL (inlined at build time) | `https://example.com` |
+| `DEPLOY_PATH` | Deployment directory on the server | `/opt/myapp` |
+
+**Repository Secrets** (Settings → Secrets → Actions):
+
+| Secret | Description |
+|---|---|
+| `DEPLOY_SSH_HOST` | Server IP or hostname |
+| `DEPLOY_SSH_USER` | SSH username |
+| `DEPLOY_SSH_KEY` | Private SSH key for server access |
+
+> `GITHUB_TOKEN` is provided automatically by GitHub Actions.
+
+#### Server Setup (One-Time)
+
+Before the first automated deployment, prepare the server:
+
+1. **Create the deployment directory** and place a configured `.env` file in it:
+   ```bash
+   mkdir -p /opt/myapp
+   cp .env.sample /opt/myapp/.env
+   # Edit .env with production values (POSTGRES_*, BETTER_AUTH_SECRET, RESEND_API_KEY)
+   # Set POSTGRES_HOST=postgres (container hostname)
+   ```
+
+2. **Ensure Docker is installed** on the server
+
+3. **Add the SSH public key** to the server's `~/.ssh/authorized_keys`
+
+#### Manual Trigger Options
+
+The workflow can also be triggered manually via GitHub UI (`Actions → Continuous delivery → Run workflow`) to override defaults:
+
+| Input | Description | Default |
+|---|---|---|
+| `build` | Build a new image before deploying | `true` |
+| `profile` | NGINX profile (`internal` or `ssl`) | required |
+| `tag` | Image tag to deploy | `latest` |
+
+**Deploy latest build with different profile:**
+- Trigger workflow with `build: true`, select profile
+
+**Deploy a specific version without rebuilding:**
+- Trigger workflow with `build: false`, `tag: v1.0.0`
+
+#### Image Tagging Strategy
+
+Images pushed to GHCR are tagged automatically:
+
+| Git Event | Image Tags |
+|---|---|
+| Push to `main` | `main`, `latest`, `sha-abc1234` |
+| Tag `v1.2.3` | `1.2.3`, `1.2`, `1`, `sha-abc1234` |
+
+---
 
 ### 🛑 Managing Production Containers
 
@@ -231,32 +331,20 @@ docker compose -f docker-compose.prod.yml logs -f nextjs
 docker compose -f docker-compose.prod.yml logs -f nginx-internal
 ```
 
-### 🔄 Updating Production
-
-After code changes:
-
-```bash
-# Pull latest changes
-git pull origin main
-
-# Redeploy with rebuild
-./scripts/deploy.sh --profile internal --rebuild
-```
-
 ### 🏗️ Production Architecture
 
 **Internal Profile (with external reverse proxy):**
 ```
-Internet → Reverse Proxy (SSL) → NGINX (Port 80) → Next.js (Port 3000)
-                                       ↓
-                                 PostgreSQL (Port 5432)
+Internet → Reverse Proxy (SSL) → NGINX (HTTP) → Next.js (:3000)
+                                                      ↓
+                                                PostgreSQL (:5432)
 ```
 
 **SSL Profile (direct SSL):**
 ```
-Internet → NGINX (Ports 80/443 with SSL) → Next.js (Port 3000)
-                        ↓
-                  PostgreSQL (Port 5432)
+Internet → NGINX (:80/:443 with SSL) → Next.js (:3000)
+                                            ↓
+                                      PostgreSQL (:5432)
 ```
 
 ## 🏗️ Project Structure
@@ -264,37 +352,71 @@ Internet → NGINX (Ports 80/443 with SSL) → Next.js (Port 3000)
 ```
 next-starter/
 ├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── api/                # API Routes
-│   │   │   └── auth/           # Auth endpoints
-│   │   ├── globals.css         # Global styles
-│   │   ├── layout.tsx          # Root layout
-│   │   └── page.tsx            # Homepage
-│   ├── database/               # Database configuration
-│   │   ├── schema/             # Drizzle schema definitions
-│   │   │   ├── auth-schema.ts  # Auth tables
-│   │   │   └── index.ts        # Schema exports
-│   │   └── index.ts            # DB connection
-│   └── lib/                    # Utility functions
-│       ├── auth/               # Auth configuration
-│       │   ├── auth-client.ts  # Client auth
-│       │   └── auth.ts         # Server auth
-│       └── utils.ts            # Helper functions
-├── scripts/                    # Automation scripts
-│   ├── initialize.sh           # Local setup script
-│   ├── deploy.sh               # Production deployment script
-│   └── stop.sh                 # Stop production containers
-├── nginx/                      # NGINX configurations
-│   ├── nginx.internal.conf     # Internal profile (behind proxy)
-│   └── nginx.ssl.conf          # SSL profile (direct SSL)
-├── drizzle/                    # Database migrations
-├── .husky/                     # Git hooks
-├── docker-compose.yml          # Development services
-├── docker-compose.prod.yml     # Production services
-├── drizzle.config.ts           # Drizzle ORM config
-├── next.config.ts              # Next.js config
-├── next.Dockerfile             # Next.js production image
-└── components.json             # Component config
+│   ├── app/                        # Next.js App Router
+│   │   ├── api/auth/[...all]/      # Auth API route
+│   │   ├── globals.css             # Global styles
+│   │   ├── layout.tsx              # Root layout
+│   │   └── page.tsx                # Homepage
+│   ├── components/ui/              # Reusable UI components (shadcn/ui)
+│   │   ├── alert.tsx               # Alert component
+│   │   ├── button.tsx              # Button component
+│   │   ├── card.tsx                # Card component
+│   │   ├── checkbox.tsx            # Checkbox component
+│   │   ├── field.tsx               # Field component
+│   │   ├── input.tsx               # Input component
+│   │   ├── input-group.tsx         # Input group component
+│   │   ├── label.tsx               # Label component
+│   │   ├── radio-group.tsx         # Radio group component
+│   │   ├── select.tsx              # Select component
+│   │   ├── separator.tsx           # Separator component
+│   │   ├── spinner.tsx             # Spinner component
+│   │   ├── switch.tsx              # Switch component
+│   │   └── textarea.tsx            # Textarea component
+│   ├── shared/form/                # Shared form system
+│   │   ├── components/             # Form components
+│   │   │   ├── fields/             # Form field components
+│   │   │   ├── helpers/            # Form helper components
+│   │   │   ├── error-alert.tsx     # Error alert component
+│   │   │   ├── form-field.tsx      # Form field wrapper
+│   │   │   └── submit-button.tsx   # Submit button component
+│   │   ├── context/                # Form context provider
+│   │   ├── hooks/                  # Form hooks (useAppForm, useFormField)
+│   │   ├── lib/                    # Form factory, types, utilities
+│   │   └── index.ts                # Public form API
+│   ├── lib/                        # Core libraries
+│   │   ├── auth/                   # Auth configuration
+│   │   │   ├── auth-client.ts      # Client-side auth
+│   │   │   └── auth.ts             # Server-side auth
+│   │   ├── database/               # Database configuration
+│   │   │   ├── schema/             # Drizzle schema definitions
+│   │   │   └── index.ts            # DB connection
+│   │   └── utils.ts                # Helper functions
+│   └── env.ts                      # Environment variable validation
+├── .github/                        # GitHub Actions
+│   ├── actions/                    # Reusable composite actions
+│   │   ├── code-analysis/          # Code analysis action
+│   │   ├── deploy/                 # Deployment action
+│   │   └── docker-build-push/      # Docker build & push action
+│   └── workflows/                  # CI/CD workflows
+│       ├── cd.yml                  # Continuous delivery
+│       └── ci.yml                  # Continuous integration
+├── scripts/                        # Automation scripts
+│   ├── initialize.sh               # Local setup script
+│   ├── deploy.sh                   # Production deployment script
+│   └── stop.sh                     # Stop production containers
+├── nginx/                          # NGINX configurations
+│   ├── nginx.internal.conf         # Internal profile (behind proxy)
+│   └── nginx.ssl.conf              # SSL profile (direct SSL)
+├── drizzle/                        # Database migrations
+├── .husky/                         # Git hooks
+├── docker-compose.yml              # Development services
+├── docker-compose.prod.yml         # Production services
+├── drizzle.config.ts               # Drizzle ORM config
+├── entrypoint.sh                   # Docker entrypoint script
+├── migrate.mjs                     # Standalone migration runner
+├── next.config.ts                  # Next.js config
+├── next.Dockerfile                 # Next.js production image
+└── components.json                 # shadcn/ui config
 ```
 
 ## 📝 Available Scripts
@@ -326,12 +448,15 @@ pnpm exec drizzle-kit studio  # Open Drizzle Studio
 ./scripts/initialize.sh                    # Full setup with database
 ./scripts/initialize.sh --skip-db          # Setup without database
 
-# Production Deployment
+# Production Deployment (manual, full repo clone)
 ./scripts/deploy.sh                        # Interactive deployment
 ./scripts/deploy.sh --profile internal     # Deploy with internal profile
 ./scripts/deploy.sh --profile ssl          # Deploy with SSL profile
 ./scripts/deploy.sh --rebuild              # Force rebuild images
 ./scripts/deploy.sh --init                 # Force reinitialization
+
+# Production Deployment (remote, used by CI/CD)
+./scripts/deploy.sh --remote --profile internal --image ghcr.io/user/repo:latest
 
 # Stop Production
 ./scripts/stop.sh                          # Interactive stop
@@ -379,11 +504,11 @@ Managed via deployment scripts (see [Production Deployment](#-production-deploym
 
 **Available Services:**
 
-| Service | Port | Profile | Description |
-|---------|------|---------|-------------|
-| `nextjs` | 3000 | all | Next.js application (production) |
-| `postgres` | 5432 | all | PostgreSQL database |
-| `nginx-internal` | 80 | internal | NGINX reverse proxy (HTTP only) |
+| Service | Port    | Profile | Description |
+|---------|---------|---------|-------------|
+| `nextjs` | 3000    | all | Next.js application (production) |
+| `postgres` | 5432    | all | PostgreSQL database |
+| `nginx-internal` | 6001    | internal | NGINX reverse proxy (HTTP only) |
 | `nginx-ssl` | 80, 443 | ssl | NGINX reverse proxy (with SSL) |
 
 ## 📄 License
