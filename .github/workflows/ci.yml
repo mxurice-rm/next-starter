@@ -1,8 +1,8 @@
-name: Code analysis checks
+name: Code analysis
 
 on:
   push:
-    branches: [ '**' ]
+    branches-ignore: [main]
     paths: &paths
       - 'src/**'
       - '*.ts'
@@ -12,35 +12,14 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/**'
+      - '.github/actions/**'
   pull_request:
     paths: *paths
 
-env:
-  NODE_VERSION: 22
-
 jobs:
-  codeanalysis:
+  code-analysis:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Check formatting
-        run: pnpm format:check
-
-      - name: Typecheck
-        run: pnpm typecheck
+      - uses: ./.github/actions/code-analysis

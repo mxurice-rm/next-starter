@@ -1,0 +1,63 @@
+name: Deploy to server
+description: Copy files and deploy via SSH to production server
+
+inputs:
+  ssh-host:
+    description: 'SSH host'
+    required: true
+  ssh-user:
+    description: 'SSH username'
+    required: true
+  ssh-key:
+    description: 'SSH private key'
+    required: true
+  deploy-path:
+    description: 'Deployment directory on the server'
+    required: true
+  profile:
+    description: 'NGINX profile (internal or ssl)'
+    required: true
+  image:
+    description: 'Docker image URL with tag'
+    required: true
+  ghcr-token:
+    description: 'GitHub token for GHCR authentication on server'
+    required: true
+  ghcr-user:
+    description: 'GitHub username for GHCR authentication on server'
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ inputs.ssh-host }}
+        username: ${{ inputs.ssh-user }}
+        key: ${{ inputs.ssh-key }}
+        target: ${{ inputs.deploy-path }}
+        source: 'docker-compose.prod.yml,nginx/,scripts/deploy.sh'
+        overwrite: true
+
+    - name: Deploy on server
+      uses: appleboy/ssh-action@v1.2.0
+      env:
+        DEPLOY_PATH: ${{ inputs.deploy-path }}
+        PROFILE: ${{ inputs.profile }}
+        IMAGE: ${{ inputs.image }}
+        GHCR_TOKEN: ${{ inputs.ghcr-token }}
+        GHCR_USER: ${{ inputs.ghcr-user }}
+      with:
+        host: ${{ inputs.ssh-host }}
+        username: ${{ inputs.ssh-user }}
+        key: ${{ inputs.ssh-key }}
+        envs: DEPLOY_PATH,PROFILE,IMAGE,GHCR_TOKEN,GHCR_USER
+        script: |
+          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+
+          cd "${DEPLOY_PATH}"
+          chmod +x scripts/deploy.sh
+
+          bash scripts/deploy.sh --remote --profile "${PROFILE}" --image "${IMAGE}"
