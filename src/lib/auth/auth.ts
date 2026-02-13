@@ -8,6 +8,7 @@ import { env } from '@/env'
 
 export const auth = betterAuth({
   baseURL: env.NEXT_PUBLIC_APP_URL,
+  trustedOrigins: [env.NEXT_PUBLIC_APP_URL],
   database: drizzleAdapter(database, {
     provider: 'pg',
     schema: {
