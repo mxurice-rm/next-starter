@@ -9,6 +9,9 @@ const pool = new Pool({
   database: env.POSTGRES_DATABASE,
   user: env.POSTGRES_USER,
   password: env.POSTGRES_PASSWORD,
+  max: 20,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 5_000,
 })
 
 export const database = drizzle({ client: pool, schema: schema })

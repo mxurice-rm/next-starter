@@ -1,7 +1,8 @@
 x-nginx-base: &nginx-base
-  image: nginx:alpine
+  image: nginx:1.29-alpine
   depends_on:
-    - nextjs
+    nextjs:
+      condition: service_healthy
   networks:
     - app-network
   restart: always
@@ -11,7 +12,7 @@ services:
     <<: *nginx-base
     profiles: [ "internal" ]
     ports:
-      - '6001:80'
+      - '5001:80'
     volumes:
       - ./nginx/nginx.internal.conf:/etc/nginx/nginx.conf:ro
 
@@ -27,6 +28,7 @@ services:
       - /var/www/certbot:/var/www/certbot:ro
 
   nextjs:
+    image: ${DOCKER_IMAGE:-ghcr.io/mxurice-rm/maxam-haustechnik:latest}
     build:
       context: .
       dockerfile: next.Dockerfile
@@ -39,6 +41,12 @@ services:
         condition: service_healthy
     networks:
       - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:3000/api/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: always
 
   postgres:
