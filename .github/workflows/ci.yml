@@ -3,7 +3,7 @@ name: Code analysis
 on:
   push:
     branches-ignore: [main]
-    paths: &paths
+    paths:
       - 'src/**'
       - '*.ts'
       - '*.tsx'
@@ -13,8 +13,6 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/**'
       - '.github/actions/**'
-  pull_request:
-    paths: *paths
 
 jobs:
   code-analysis:
