@@ -1,57 +1,39 @@
-import FormField from '@/shared/form/components/form-field'
-import React from 'react'
-import { MaybeInputGroup } from '@/shared/form/components/helpers/maybe-input-group'
 import { InputGroupTextarea } from '@/components/ui/input-group'
-import { FieldAddon } from '@/shared/form/lib/types'
 import { Textarea } from '@/components/ui/textarea'
+import { FormField } from '@/shared/form/components/form-field'
+import { MaybeInputGroup } from '@/shared/form/components/helpers/maybe-input-group'
 import { createFormField } from '@/shared/form/lib'
+import { buildTextInputProps } from '@/shared/form/lib/text-input-props'
+import { FieldAddon } from '@/shared/form/lib/types'
 
 interface TextareaFieldProps {
   addons?: FieldAddon[]
 }
 
-const TextareaField = createFormField<
+export const TextareaField = createFormField<
   typeof Textarea,
   string,
   TextareaFieldProps,
   'placeholder'
 >(({ formField, props }) => {
   const { addons, ...restProps } = props
-
-  const onChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    formField.field.handleChange(e.target.value)
-  }
-
-  const inputProps = {
-    value: formField.field.state.value,
-    onChange,
-    onBlur: formField.field.handleBlur,
-    name: formField.field.name,
-    placeholder: formField.texts.placeholder,
-    ...restProps,
-  }
+  const inputProps = buildTextInputProps(formField, restProps)
 
   return (
     <FormField formField={formField}>
       {(FieldControl) => (
         <MaybeInputGroup addons={addons}>
-          {(hasAddons) => {
-            return (
-              <FieldControl>
-                {hasAddons ? (
-                  <InputGroupTextarea {...inputProps} />
-                ) : (
-                  <Textarea {...inputProps} />
-                )}
-              </FieldControl>
-            )
-          }}
+          {(hasAddons) => (
+            <FieldControl>
+              {hasAddons ? (
+                <InputGroupTextarea {...inputProps} />
+              ) : (
+                <Textarea {...inputProps} />
+              )}
+            </FieldControl>
+          )}
         </MaybeInputGroup>
       )}
     </FormField>
   )
 })
-
-export default TextareaField

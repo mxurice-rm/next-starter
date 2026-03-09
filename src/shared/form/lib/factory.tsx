@@ -1,9 +1,12 @@
 import React from 'react'
-import { FieldTexts, FieldState } from './types'
+
 import { useFormField } from '@/shared/form/hooks/use-form-field'
+
+import { FieldState, FieldTexts } from './types'
 
 export type FieldOptions = {
   isIteratedField?: boolean
+  singleField?: boolean
 }
 
 // --- Render Types ---
@@ -56,7 +59,7 @@ type ChainableFieldComponent<
   ) => FieldComponent<TComponent, TSpecificProps, TOmit>
 }
 
-export function createFormField<
+export const createFormField = <
   TComponent extends React.ElementType,
   TValue = unknown,
   TSpecificProps = object,
@@ -64,7 +67,7 @@ export function createFormField<
 >(
   render: Renderer<RendererProps<TComponent, TSpecificProps, TOmit>>,
   options?: FieldOptions,
-): ChainableFieldComponent<TComponent, TSpecificProps, TOmit> {
+): ChainableFieldComponent<TComponent, TSpecificProps, TOmit> => {
   const buildFieldComponent = (
     fieldOptions?: FieldOptions,
   ): FieldComponent<TComponent, TSpecificProps, TOmit> => {

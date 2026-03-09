@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import React, { useContext, useEffect, useRef } from 'react'
+
 import {
   Field,
   FieldContent,
@@ -5,10 +8,8 @@ import {
   FieldError,
   FieldLabel,
 } from '@/components/ui/field'
-import { FieldLayout, FieldState } from '@/shared/form/lib/types'
-import React, { useContext, useEffect, useRef } from 'react'
 import { FieldControlContext } from '@/shared/form/context/form-context'
-import Link from 'next/link'
+import { FieldLayout, FieldState } from '@/shared/form/lib/types'
 
 const FieldControlComponent = ({
   children,
@@ -34,7 +35,7 @@ const FieldControlComponent = ({
   } as React.InputHTMLAttributes<HTMLInputElement>)
 }
 
-const FormField = ({
+export const FormField = ({
   suppressErrors,
   config,
   children,
@@ -45,7 +46,8 @@ const FormField = ({
   formField: FieldState
   children: (FieldControl: typeof FieldControlComponent) => React.ReactElement
 }) => {
-  const { field, isInvalid, isArrayField, inputId, texts } = formField
+  const { field, isInvalid, isArrayField, inputId, texts, requiredIndicator } =
+    formField
   const { label, link, description } = texts
   const { orientation, wrapContent, controlFirst } = config ?? {}
 
@@ -58,18 +60,34 @@ const FormField = ({
     controlRef.current = element
   }
 
+  const indicatorBadge =
+    requiredIndicator === 'required' ? (
+      <span className="text-destructive" aria-hidden="true">
+        *
+      </span>
+    ) : requiredIndicator === 'optional' ? (
+      <span className="text-muted-foreground text-xs">Optional</span>
+    ) : null
+
   const labelElement = link?.text ? (
     <div className="flex w-full items-center justify-between">
-      <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+      <FieldLabel htmlFor={inputId}>
+        {label}
+        {indicatorBadge && <> {indicatorBadge}</>}
+      </FieldLabel>
       <Link
-        className="text-primary hover:text-primary/80 text-sm underline underline-offset-3 hover:cursor-pointer"
+        className="text-primary hover:text-primary/80 text-sm underline underline-offset-4 hover:cursor-pointer"
         href={link.to ?? ''}
+        onMouseDown={(e) => e.preventDefault()}
       >
         {link.text}
       </Link>
     </div>
   ) : (
-    <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+    <FieldLabel htmlFor={inputId}>
+      {label}
+      {indicatorBadge && <> {indicatorBadge}</>}
+    </FieldLabel>
   )
   const descriptionElement = <FieldDescription>{description}</FieldDescription>
 
@@ -139,5 +157,3 @@ const FormField = ({
     </FieldControlContext.Provider>
   )
 }
-
-export default FormField

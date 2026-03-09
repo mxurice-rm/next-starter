@@ -1,11 +1,12 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import React from 'react'
-import { useFormContext } from '@/shared/form/context/form-context'
-import { Spinner } from '@/components/ui/spinner'
 
-const SubmitButton = ({
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
+import { useFormContext } from '@/shared/form/context/form-context'
+
+export const SubmitButton = ({
   label = 'Submit',
   icon,
 }: {
@@ -13,15 +14,23 @@ const SubmitButton = ({
   icon: React.ReactElement
 }) => {
   const form = useFormContext()
+
   return (
-    <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-      {([canSubmit, isSubmitting]) => (
-        <Button type="submit" disabled={!canSubmit}>
+    <form.Subscribe
+      selector={(state) => ({
+        canSubmit: state.canSubmit,
+        isSubmitting: state.isSubmitting,
+      })}
+    >
+      {({ canSubmit, isSubmitting }) => (
+        <Button
+          type="submit"
+          disabled={!canSubmit}
+          onMouseDown={(e) => e.preventDefault()}
+        >
           {isSubmitting ? <Spinner /> : icon} {label}
         </Button>
       )}
     </form.Subscribe>
   )
 }
-
-export default SubmitButton

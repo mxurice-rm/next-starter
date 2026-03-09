@@ -1,17 +1,21 @@
-import React, { useRef, useState } from 'react'
-import FormField from '@/shared/form/components/form-field'
+'use client'
+
+import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import { useRef, useState } from 'react'
+
 import { Input } from '@/components/ui/input'
 import { InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
+import { FormField } from '@/shared/form/components/form-field'
 import { MaybeInputGroup } from '@/shared/form/components/helpers/maybe-input-group'
-import { FieldAddon } from '@/shared/form/lib/types'
 import { createFormField } from '@/shared/form/lib'
-import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import { buildTextInputProps } from '@/shared/form/lib/text-input-props'
+import { FieldAddon } from '@/shared/form/lib/types'
 
 interface PasswordFieldProps {
   addons?: FieldAddon[]
 }
 
-const PasswordField = createFormField<
+export const PasswordField = createFormField<
   typeof Input,
   string,
   PasswordFieldProps,
@@ -20,12 +24,6 @@ const PasswordField = createFormField<
   const { addons = [], ...restProps } = props
   const [visible, setVisible] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
-
-  const onChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    formField.field.handleChange(e.target.value)
-  }
 
   const toggleVisibility = () => {
     setVisible((prev) => !prev)
@@ -48,14 +46,9 @@ const PasswordField = createFormField<
   ]
 
   const inputProps = {
+    ...buildTextInputProps(formField, restProps),
     ref: inputRef,
-    value: formField.field.state.value,
-    onChange,
-    onBlur: formField.field.handleBlur,
-    name: formField.field.name,
-    placeholder: formField.texts.placeholder,
     type: visible ? 'text' : 'password',
-    ...restProps,
   }
 
   return (
@@ -76,5 +69,3 @@ const PasswordField = createFormField<
     </FormField>
   )
 })
-
-export default PasswordField

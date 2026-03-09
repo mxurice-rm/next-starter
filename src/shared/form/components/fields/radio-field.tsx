@@ -1,6 +1,6 @@
-import FormField from '@/shared/form/components/form-field'
-import { RadioGroupItem } from '@/components/ui/radio-group'
 import { FieldLabel } from '@/components/ui/field'
+import { RadioGroupItem } from '@/components/ui/radio-group'
+import { FormField } from '@/shared/form/components/form-field'
 import { createFormField } from '@/shared/form/lib'
 
 interface RadioFieldProps {
@@ -8,7 +8,7 @@ interface RadioFieldProps {
   asCard?: boolean
 }
 
-const RadioField = createFormField<
+export const RadioField = createFormField<
   typeof RadioGroupItem,
   string,
   RadioFieldProps
@@ -38,5 +38,3 @@ const RadioField = createFormField<
 
   return content
 }).withOptions({ isIteratedField: true })
-
-export default RadioField

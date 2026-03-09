@@ -1,8 +1,8 @@
 import { Switch } from '@/components/ui/switch'
-import FormField from '@/shared/form/components/form-field'
+import { FormField } from '@/shared/form/components/form-field'
 import { createFormField } from '@/shared/form/lib'
 
-const SwitchField = createFormField<typeof Switch, boolean>(
+export const SwitchField = createFormField<typeof Switch, boolean>(
   ({ formField, props }) => {
     const { field } = formField
 
@@ -24,5 +24,3 @@ const SwitchField = createFormField<typeof Switch, boolean>(
     )
   },
 )
-
-export default SwitchField

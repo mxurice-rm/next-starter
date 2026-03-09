@@ -1,0 +1,15 @@
+# Alles ignorieren
+*
+
+# Allow only relevant files for build
+!src/
+!public/
+!drizzle/
+!package.json
+!pnpm-lock.yaml
+!tsconfig.json
+!next.config.ts
+!postcss.config.mjs
+!components.json
+!migrate.mjs
+!entrypoint.sh

@@ -1,8 +1,9 @@
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useFormContext } from '@/shared/form/context/form-context'
 import { AlertCircleIcon } from 'lucide-react'
 
-const ErrorAlert = () => {
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useFormContext } from '@/shared/form/context/form-context'
+
+export const ErrorAlert = () => {
   const form = useFormContext()
 
   return (
@@ -25,5 +26,3 @@ const ErrorAlert = () => {
     </form.Subscribe>
   )
 }
-
-export default ErrorAlert

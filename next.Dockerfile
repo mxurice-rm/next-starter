@@ -1,51 +1,74 @@
-FROM node:22-alpine AS base
+# ============================================
+# Stage 1: Install dependencies
+# ============================================
 
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+ARG NODE_VERSION=24.13.0-slim
+
+FROM node:${NODE_VERSION} AS dependencies
+
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
 
-FROM base AS builder
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+  corepack enable pnpm && pnpm install --frozen-lockfile
+
+# ============================================
+# Stage 2: Build Next.js application
+# ============================================
+
+FROM node:${NODE_VERSION} AS builder
+
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 
 ENV SKIP_ENV_VALIDATION=true
 ARG NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
-RUN corepack enable pnpm && pnpm run build
+RUN corepack enable pnpm && pnpm build
 
-FROM base AS runner
+# ============================================
+# Stage 3: Run Next.js application
+# ============================================
+
+FROM node:${NODE_VERSION} AS runner
+
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-RUN apk add --no-cache postgresql-client
+# Install postgresql-client (pg_isready) and curl (healthcheck)
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copy production assets
+COPY --from=builder --chown=node:node /app/public ./public
 
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Set the correct permission for prerender cache
+RUN mkdir .next && chown node:node .next
 
-# Ensure migration dependencies are available
-COPY --from=deps /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
-COPY --from=deps /app/node_modules/pg ./node_modules/pg
+# Copy standalone output and static files
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-COPY --from=builder /app/drizzle ./drizzle
-COPY --from=builder /app/migrate.mjs ./migrate.mjs
+# Copy migration dependencies
+COPY --from=dependencies --chown=node:node /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
+COPY --from=dependencies --chown=node:node /app/node_modules/pg ./node_modules/pg
 
-COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
-RUN chown nextjs:nodejs ./entrypoint.sh && chmod +x ./entrypoint.sh
+# Copy migration files and entrypoint
+COPY --from=builder --chown=node:node /app/drizzle ./drizzle
+COPY --from=builder --chown=node:node /app/migrate.mjs ./migrate.mjs
+COPY --from=builder --chown=node:node /app/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-USER nextjs
+# Switch to non-root user
+USER node
 
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 ENTRYPOINT ["./entrypoint.sh"]
