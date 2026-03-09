@@ -1,4 +1,5 @@
-import FormField from '@/shared/form/components/form-field'
+import React from 'react'
+
 import {
   Select,
   SelectContent,
@@ -6,15 +7,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import React from 'react'
+import { FormField } from '@/shared/form/components/form-field'
 import { createFormField } from '@/shared/form/lib'
+import type { SelectOption } from '@/shared/form/lib/types'
 
 interface SelectFieldProps {
-  options?: { value: string; label: string }[]
+  options?: SelectOption[]
   children?: React.ReactNode
 }
 
-const SelectField = createFormField<
+export const SelectField = createFormField<
   typeof SelectTrigger,
   string,
   SelectFieldProps
@@ -28,7 +30,10 @@ const SelectField = createFormField<
         <Select
           name={field.name}
           value={field.state.value}
-          onValueChange={field.handleChange}
+          onValueChange={(val) => {
+            field.handleChange(val)
+            field.handleBlur()
+          }}
         >
           <FieldControl>
             <SelectTrigger {...restProps}>
@@ -48,5 +53,3 @@ const SelectField = createFormField<
     </FormField>
   )
 })
-
-export default SelectField

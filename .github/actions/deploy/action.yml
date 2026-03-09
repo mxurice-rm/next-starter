@@ -31,33 +31,36 @@ runs:
   using: composite
 
   steps:
+    - name: Setup SSH
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        echo "${{ inputs.ssh-key }}" | tr -d '\r' > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H ${{ inputs.ssh-host }} >> ~/.ssh/known_hosts
+        chmod 644 ~/.ssh/known_hosts
+
     - name: Copy files to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ inputs.ssh-host }}
-        username: ${{ inputs.ssh-user }}
-        key: ${{ inputs.ssh-key }}
-        target: ${{ inputs.deploy-path }}
-        source: 'docker-compose.prod.yml,nginx/,scripts/deploy.sh'
-        overwrite: true
+      shell: bash
+      run: |
+        rsync -avzR \
+          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+          docker-compose.prod.yml nginx scripts/deploy.sh \
+          ${{ inputs.ssh-user }}@${{ inputs.ssh-host }}:${{ inputs.deploy-path }}/
 
     - name: Deploy on server
-      uses: appleboy/ssh-action@v1.2.0
-      env:
-        DEPLOY_PATH: ${{ inputs.deploy-path }}
-        PROFILE: ${{ inputs.profile }}
-        IMAGE: ${{ inputs.image }}
-        GHCR_TOKEN: ${{ inputs.ghcr-token }}
-        GHCR_USER: ${{ inputs.ghcr-user }}
-      with:
-        host: ${{ inputs.ssh-host }}
-        username: ${{ inputs.ssh-user }}
-        key: ${{ inputs.ssh-key }}
-        envs: DEPLOY_PATH,PROFILE,IMAGE,GHCR_TOKEN,GHCR_USER
-        script: |
-          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+      shell: bash
+      run: |
+        ssh -i ~/.ssh/deploy_key \
+          -o StrictHostKeyChecking=yes \
+          ${{ inputs.ssh-user }}@${{ inputs.ssh-host }} \
+          'echo "${{ inputs.ghcr-token }}" | docker login ghcr.io -u "${{ inputs.ghcr-user }}" --password-stdin && \
+           cd "${{ inputs.deploy-path }}" && \
+           chmod +x scripts/deploy.sh && \
+           bash scripts/deploy.sh --remote --profile "${{ inputs.profile }}" --image "${{ inputs.image }}"'
 
-          cd "${DEPLOY_PATH}"
-          chmod +x scripts/deploy.sh
-
-          bash scripts/deploy.sh --remote --profile "${PROFILE}" --image "${IMAGE}"
+    - name: Cleanup SSH key
+      if: always()
+      shell: bash
+      run: rm -f ~/.ssh/deploy_key
